@@ -57,9 +57,10 @@ Open that URL in your browser, share it via screen-share, and upload your clips.
 
 ## Status
 
-> **Note:** This repository is a fresh scaffold. The implementation plan lives in
-> [`TASKS.md`](./TASKS.md) — future work is tracked there. None of the application code is
-> written yet.
+> **Phase 0–3 complete.** The core application is functional: FastAPI backend with SQLite storage,
+> audio fingerprinting alignment via audalign, multi-video synchronized player with manual offset
+> nudge controls, and drag-drop upload UI. Phase 4 (packaging hardening, error UX, docs polish)
+> remains. See [`TASKS.md`](./TASKS.md) for details.
 
 ## Configuration
 

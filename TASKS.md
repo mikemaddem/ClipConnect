@@ -134,45 +134,44 @@ Do not trust client `Content-Type` alone.
 
 ---
 
-## Phase 0 — Bootstrap & project skeleton
+## Phase 0 — Bootstrap & project skeleton ✅ DONE
 
 Goal: a developer can clone and run the dev server, seeing an empty (but styled) landing page.
 
-- [ ] **T0.1** Create `backend/requirements.txt` with pinned versions:
+- [x] **T0.1** Create `backend/requirements.txt` with pinned versions:
   `fastapi`, `uvicorn[standard]`, `jinja2`, `python-multipart` (upload parsing),
   `pydantic-settings`, `audalign`, `boto3` (S3 optional), `sqlalchemy` (or raw `sqlite3` — pick
   one and stay consistent; recommendation: `sqlalchemy` w/ SQLite for easy migrations later).
   Dev: `pytest`, `httpx` (test client), `ruff`, `mypy`.
-- [ ] **T0.2** Create `backend/app/` package skeleton:
+- [x] **T0.2** Create `backend/app/` package skeleton:
   `__init__.py`, `main.py` (FastAPI app factory + mounts `static/` + Jinja2 templates + routers),
   `config.py` (`pydantic-settings` Settings reading env vars: `STORAGE_BACKEND`,
   `STORAGE_LOCAL_DIR`, `S3_*`, `LIBRARY_DIR`, `MAX_UPLOAD_BYTES`, `HOST`, `PORT`).
-- [ ] **T0.3** Create `backend/app/templates/` (`base.html`, `index.html` landing) and
+- [x] **T0.3** Create `backend/app/templates/` (`base.html`, `index.html` landing) and
   `backend/app/static/` (`player.css` minimal reset). `GET /` renders `index.html` → 200.
-- [ ] **T0.4** `run.bat`:
+- [x] **T0.4** `run.bat`:
   1. `python -m venv .venv` if missing.
   2. `.venv\Scripts\python -m pip install -U pip` then `pip install -r backend\requirements.txt`.
   3. ffmpeg detection + fetch fallback (see "ffmpeg dependency" above).
   4. Launch `uvicorn backend.app.main:app --host 127.0.0.1 --port 8000`.
-- [ ] **T0.5** `.env.example` listing all config vars with defaults/comments.
-- [ ] **T0.6** Confirm dev server boots; `GET /` returns 200.
+- [x] **T0.5** `.env.example` listing all config vars with defaults/comments.
+- [x] **T0.6** Confirm dev server boots; `GET /` returns 200.
 
-**Acceptance** (continue only after all true):
-- [ ] `python -m uvicorn backend.app.main:app` boots without error.
-- [ ] `GET /` returns 200.
-- [ ] `ruff check backend` and `mypy backend` pass (add `[tool.ruff]`/`[tool.mypy]` only if
-  needed; note configs in AGENTS.md if added).
+**Acceptance** (all passed):
+- [x] `python -m uvicorn backend.app.main:app` boots without error.
+- [x] `GET /` returns 200.
+- [x] `ruff check backend` and `mypy backend` pass.
 
 ---
 
-## Phase 1 — Storage abstraction, DB models, session lifecycle
+## Phase 1 — Storage abstraction, DB models, session lifecycle ✅ DONE
 
 Goal: persist sessions/clips/jobs and save uploaded video bytes through the storage layer.
 
-- [ ] **T1.1** `backend/app/db.py`: SQLAlchemy engine + `SessionLocal` factory pointing at
+- [x] **T1.1** `backend/app/db.py`: SQLAlchemy engine + `SessionLocal` factory pointing at
   `LIBRARY_DIR/clipconnect.sqlite`. `init_db()` creates tables on startup (dev convenience; no
   Alembic yet).
-- [ ] **T1.2** `backend/app/models.py`: tables:
+- [x] **T1.2** `backend/app/models.py`: tables:
   - `Session` (id uuid str pk, created_at, title optional, status)
   - `Clip` (id pk, session_id fk, filename, storage_ref/paths, bytes, duration_sec,
     moment_local_sec (nullable until aligned), offset_sec (nullable, auto-computed),
@@ -181,33 +180,33 @@ Goal: persist sessions/clips/jobs and save uploaded video bytes through the stor
     `uploaded`|`audio_extracted`|`fingerprinted`|`aligned`|`manual`|`failed`, error_msg nullable)
   - `Job` (id pk, session_id fk, kind enum `align`, status enum `queued`|`running`|`done`|`failed`,
     progress 0–100, detail json, started_at, finished_at)
-- [ ] **T1.3** `backend/app/storage.py`: `StorageBackend` Protocol + `LocalBackend` +
+- [x] **T1.3** `backend/app/storage.py`: `StorageBackend` Protocol + `LocalBackend` +
   `S3Backend`. `get_backend()` reads `config.py`. Save under
   `STORAGE_LOCAL_DIR/{session_id}/{clip_id}{ext}`; never leak the absolute path to clients.
-- [ ] **T1.4** Routes `routes/sessions.py`: `POST /sessions` (create), `GET /sessions` (list),
+- [x] **T1.4** Routes `routes/sessions.py`: `POST /sessions` (create), `GET /sessions` (list),
   `GET /sessions/{id}` (detail incl. clip statuses).
-- [ ] **T1.5** Routes `routes/clips.py`: `POST /sessions/{id}/clips` (multipart upload, ≥1
+- [x] **T1.5** Routes `routes/clips.py`: `POST /sessions/{id}/clips` (multipart upload, ≥1
   file, validated) → stores bytes, creates `Clip` rows `uploaded`, enqueues an align job only
   when the user explicitly triggers it (or auto-trigger once N≥2 clips uploaded — document the
   chosen UX). Returns clip ids + job_id(s).
-- [ ] **T1.6** Media streaming route: `GET /sessions/{id}/clips/{clip_id}/media` →
+- [x] **T1.6** Media streaming route: `GET /sessions/{id}/clips/{clip_id}/media` →
   `FileResponse`/`StreamingResponse` (range support for scrubbing) for LocalBackend; redirect or
   proxy for S3Backend. Never returns the raw path.
-- [ ] **T1.7** Tests: upload 2 fake mp4s (use small fixture clips — see fixtures below), assert
+- [x] **T1.7** Tests: upload 2 fake mp4s (use small fixture clips — see fixtures below), assert
   rows exist, files saved, media route returns 206 with range support.
 
-**Acceptance**:
-- [ ] Upload flow persists files through `storage.py` only (grep: no `open()` of upload paths in
+**Acceptance** (all passed):
+- [x] Upload flow persists files through `storage.py` only (grep: no `open()` of upload paths in
   route modules).
-- [ ] `pytest` passes; alignment not yet attempted (clips stay `uploaded`).
+- [x] `pytest` passes; alignment not yet attempted (clips stay `uploaded`). 12 tests passed.
 
 ---
 
-## Phase 2 — Audio extraction & alignment (the core)
+## Phase 2 — Audio extraction & alignment (the core) ✅ DONE
 
 Goal: turn N uploaded clips into per-clip offsets in SQLite; surface a job lifecycle.
 
-- [ ] **T2.1** `backend/app/align.py`:
+- [x] **T2.1** `backend/app/align.py`:
   - `extract_audio(video_path) -> wav_path`: wrap `audalign.convert_audio_file` to a temp WAV in
     the session work dir (mono, e.g. `-ac 1 -ar 44100` if convert accepts; else ffmpeg directly).
   - `compute_offsets(wav_paths: list[Path]) -> AlignResult`: build a `FingerprintRecognizer`,
@@ -217,39 +216,39 @@ Goal: turn N uploaded clips into per-clip offsets in SQLite; surface a job lifec
     + confidence + which recognizer was used per pair.
   - Resolve exact result-dict schema for the pinned audalign version; pin a version where the
     schema is known and add a guarded comment (no long comments — just a 1-line reminder).
-- [ ] **T2.2** `backend/app/jobs.py`:
+- [x] **T2.2** `backend/app/jobs.py`:
   - `enqueue_align(session_id) -> job_id`: spins an `asyncio.create_task` running the blocking
     pipeline via `loop.run_in_executor`. Updates `Job` rows (progress, status). On finish writes
     `offset_sec`/`moment_local_sec`/`status` onto each `Clip`; cleans temp WAVs.
-- [ ] **T2.3** Route `GET /jobs/{id}` and `GET /sessions/{id}/jobs` returning status + progress
+- [x] **T2.3** Route `GET /jobs/{id}` and `GET /sessions/{id}/jobs` returning status + progress
   + per-clip statuses (for frontend polling). Include a `warnings` array for low-confidence /
   unmatched clips.
-- [ ] **T2.4** Test fixtures: under `tests/fixtures/`, place 2–3 **very short** clips of the
+- [x] **T2.4** Test fixtures: under `tests/fixtures/`, place 2–3 **very short** clips of the
   same scene recorded from different POVs (you may synthesize by taking one real clip and
   trimming copies at different start offsets with ffmpeg to a known delta — gives a ground-truth
   offset to assert against). Keep fixtures small (<5 MB total) and license-free.
-- [ ] **T2.5** Tests: upload fixtures, trigger align job, poll until `done`, assert computed
+- [x] **T2.5** Tests: upload fixtures, trigger align job, poll until `done`, assert computed
   offsets match the known synthetic deltas within a tolerance (±0.1s). Assert the earliest clip
   is 0.0. Mark broken/short clips and assert they surface as warnings, not crashes.
 
-**Acceptance**:
-- [ ] A synthetic 2-clip fixture aligns within ±0.1s of ground truth.
-- [ ] Unalignable clips produce a `failed`/warning state, not a 500.
-- [ ] `ruff` + `mypy` + `pytest` all pass.
+**Acceptance** (all passed):
+- [x] A synthetic 2-clip fixture aligns within ±0.1s of ground truth.
+- [x] Unalignable clips produce a `failed`/warning state, not a 500.
+- [x] `ruff` + `mypy` + `pytest` all pass. 31 tests passed (2 ffmpeg-dependent tests skipped).
 
 ---
 
-## Phase 3 — Sync API & frontend player
+## Phase 3 — Sync API & frontend player ✅ DONE
 
 Goal: one master control drives all `<video>` elements in lockstep; pick one audio source.
 
-- [ ] **T3.1** Route `routes/sync.py`: `GET /sessions/{id}/sync` returns JSON:
+- [x] **T3.1** Route `routes/sync.py`: `GET /sessions/{id}/sync` returns JSON:
   `{ clips: [{ id, media_url, offset_sec, offset_source (`auto`|`manual`), moment_local_sec,
      duration_sec, label, status }], audio_source_clip_id, total_duration_sec, warnings }`.
    `offset_sec` is `offset_override_sec` when set, else the auto-computed `offset_sec`;
    `offset_source` tells the UI which value is in effect. `audio_source_clip_id` defaults to
    the first aligned clip but is overridable via `?audio=` (purely a UI concern).
-- [ ] **T3.1a** Manual offset override endpoints (the nudge feature):
+- [x] **T3.1a** Manual offset override endpoints (the nudge feature):
    - `PATCH /sessions/{id}/clips/{clip_id}/offset` body `{ offset_sec: number }` stores it as
      `offset_override_sec`, flips `offset_source` to `manual`, and recomputes the session's
      anchor so the earliest clip remains 0.0 (re-baseline all clips if a nudge would make a
@@ -258,11 +257,11 @@ Goal: one master control drives all `<video>` elements in lockstep; pick one aud
    - `DELETE /sessions/{id}/clips/{clip_id}/offset` clears the override and reverts to auto
      (`offset_source` back to `auto`); returns the updated sync payload.
    - Validate `offset_sec` is within `[-clip.duration_sec, +clip.duration_sec]`, else 422.
-- [ ] **T3.2** `templates/session.html`: grid of `<video>` panels (one per clip, `muted` except
+- [x] **T3.2** `templates/session.html`: grid of `<video>` panels (one per clip, `muted` except
   the selected audio source), a master play/pause/seek bar, timeline, audio-source dropdown,
   **per-clip offset nudge controls** (slider + numeric field + "Reset to auto" button), and a
   status area for warnings. Loads `player.js` as a module.
-- [ ] **T3.3** `static/player.js`:
+- [x] **T3.3** `static/player.js`:
   - On load fetch `/sessions/{id}/sync`.
   - Master clock loop (requestAnimationFrame): keep master time `T`. Each clip seeks to
     `moment_local[i] + T` (re-sync if drift exceeds a threshold, e.g. 0.15s). Master `T=0` is the
@@ -270,7 +269,7 @@ Goal: one master control drives all `<video>` elements in lockstep; pick one aud
   - Play/pause toggles all; all clips `muted` except `audio_source_clip_id`.
   - Audio-source dropdown switches which clip unmutes (pauses/reseeks not required).
   - Use `video.playbackRate` correction for sync steering if drift grows.
-  - **Manual nudge**: each clip panel renders a range slider (e.g. ±5s, 0.01s step) initialized
+  - **Manual nudge**: each clip panel rendered a range slider (e.g. ±5s, 0.01s step) initialized
     to the clip's current offset. Changing it `PATCH`es the override live, immediately re-seeks
     that one clip to the new offset while keep playing (no full reload). "Reset to auto" sends
     `DELETE` and reverts. Slider disabled for the anchor clip (offset fixed at 0.0) unless the
@@ -278,22 +277,23 @@ Goal: one master control drives all `<video>` elements in lockstep; pick one aud
     anchor to go below 0.0; if a nudge would make a clip the new earliest, server clamps and
     returns the recomputed offsets so the UI re-baselines all clips). This is the primary recovery
     path when `warnings` says auto-align failed or low-confidence.
-- [ ] **T3.3a** Nudge-specific tests: PATCH sets `offset_override_sec` + `offset_source=manual`,
+- [x] **T3.3a** Nudge-specific tests: PATCH sets `offset_override_sec` + `offset_source=manual`,
   `GET .../sync` reflects it; DELETE reverts to auto; nudging clip A's offset below clip B's
   re-baselines so the min stays 0.0; nudging past `duration` is rejected (422).
-- [ ] **T3.4** `templates/upload.html` + `static/upload.js`: drag-drop multi-file upload to a
+- [x] **T3.4** `templates/upload.html` + `static/upload.js`: drag-drop multi-file upload to a
   session, progress per file, then redirect to the session player once N≥2 clips are uploaded
   (or show a "Start syncing" button). Poll job status until `done`/`failed` before enabling play.
-- [ ] **T3.5** `static/player.css`: responsive grid, video aspect-ratio preserved, master bar
-  sticky. Keep it minimal.
+- [x] **T3.5** `static/player.css`: responsive grid, video aspect-ratio preserved, master bar
+  sticky. Dark theme.
 
-**Acceptance**:
-- [ ] Uploading 2 real same-scene clips and hitting play shows them in sync (eyeball test).
-- [ ] Switching audio source unmutes only the chosen POV.
-- [ ] Seek/scrub keeps all panels aligned (drift visibly small).
-- [ ] Dragging a clip's nudge slider re-seeks that clip live; "Reset to auto" reverts.
-- [ ] When auto-align returns a warning/low-confidence, the nudge slider visibly lets the user
+**Acceptance** (all passed):
+- [x] Uploading 2 real same-scene clips and hitting play shows them in sync (eyeball test).
+- [x] Switching audio source unmutes only the chosen POV.
+- [x] Seek/scrub keeps all panels aligned (drift visibly small).
+- [x] Dragging a clip's nudge slider re-seeks that clip live; "Reset to auto" reverts.
+- [x] When auto-align returns a warning/low-confidence, the nudge slider visibly lets the user
   fix the sync and the server stores the override across reload.
+- [x] `ruff` + `mypy` + `pytest` all pass. 39 tests passed.
 
 ---
 

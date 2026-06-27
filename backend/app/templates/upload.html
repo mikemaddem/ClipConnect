@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}ClipConnect — Upload{% endblock %}
+
+{% block content %}
+<div id="upload-app" data-session-id="{{ session_id or '' }}">
+    <header>
+        <h1>ClipConnect — Upload Clips</h1>
+    </header>
+
+    <div id="session-setup">
+        <label for="session-title">Session title (optional):</label>
+        <input id="session-title" type="text" placeholder="My session">
+        <button id="btn-create-session" type="button">Create Session</button>
+    </div>
+
+    <div id="drop-zone">
+        <p>Drag &amp; drop video files here, or click to select</p>
+        <input id="file-input" type="file" multiple accept="video/*">
+    </div>
+
+    <div id="file-list"></div>
+
+    <div id="upload-actions" class="hidden">
+        <button id="btn-upload" type="button" disabled>Upload Files</button>
+        <button id="btn-align" type="button" class="hidden">Start Syncing</button>
+    </div>
+
+    <div id="status-area" class="hidden">
+        <p id="status-text">Uploading...</p>
+        <div id="progress-container"></div>
+    </div>
+</div>
+<script type="module" src="/static/upload.js"></script>
+{% endblock %}
